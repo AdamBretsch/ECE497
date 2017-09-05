@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import curses, sys
 
-
 def main(scr):
+    # look for arguments
     if len(sys.argv) == 3:
       x1 = int(sys.argv[1])
       y1 = int(sys.argv[2])
@@ -12,13 +12,12 @@ def main(scr):
     #  account for 0 included in numbering
     x1 = x1-1
     y1 = y1-1
+    # clear screen
     scr.clear()
     y0, x0 = 0, 0
-
+    # find screen center and move cursor
     yc, xc = (y1-y0)//2, (x1-x0)//2
-
     scr.move(yc, xc)
-
     scr.refresh()
 
     x = xc
@@ -26,11 +25,11 @@ def main(scr):
     ch = 'X'
 
     while True:
-
+      # check key input
       key = scr.getkey()
-      if key == 'q':
+      if key == 'q': # quit
           break
-      elif key == 'z':
+      elif key == 'z': # clear screen
           scr.clear()
           scr.move(x,y)
           ch = ' '
@@ -52,13 +51,15 @@ def main(scr):
       scr.addstr(ch)
       scr.move(y, x)
       scr.refresh()
-      ch = 'X'
+      ch = 'X' # make sure ch is reset
 
 if __name__ == "__main__":
+   # pregame instructions
    print("Welcome to Etch-A-Sketch! Move with the arrow keys, press z to clear and q to quit")
    if len(sys.argv) == 3 :
      print("You have requested a " + sys.argv[1] + " by " + sys.argv[2] + " grid")
    else:
      print("You have not requested a grid size, so 8 by 8 will be used. To request a grid size see readme")
    input("Press enter to begin playing...")
+   # using wrapper makes setup much easier
    curses.wrapper(main)
