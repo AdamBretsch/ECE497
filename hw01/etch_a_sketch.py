@@ -23,7 +23,7 @@ def main(scr):
     x = xc
     y = yc
     ch = 'X'
-
+    lastch = 'X'
     while True:
       # check key input
       key = scr.getkey()
@@ -32,9 +32,9 @@ def main(scr):
       elif key == 'z': # clear screen
           scr.clear()
           scr.move(x,y)
-          ch = ' '
-	 # TODO Fix screen clearing for multiple types
-      elif key == 'KEY_UP':
+          oldch = ch
+          ch = '	'
+      elif key == 'KEY_UP': # TODO fix outside sceen bounds error
         if y > 0:
           y -= 1
       elif key == 'KEY_DOWN':
@@ -46,16 +46,20 @@ def main(scr):
       elif key == 'KEY_RIGHT':
         if x < x1:
           x += 1
-	 # TODO: add multiple key types, ch = ?
+      else: # set cursor to new charactor if no other action
+         oldch = ch
+         ch = key
 
       scr.addstr(ch)
       scr.move(y, x)
       scr.refresh()
-      ch = 'X' # make sure ch is reset
+      if ch == '	':
+        ch = oldch # make sure ch is reset
 
 if __name__ == "__main__":
    # pregame instructions
    print("Welcome to Etch-A-Sketch! Move with the arrow keys, press z to clear and q to quit")
+   print("All other keys can be used to change the cursor")
    if len(sys.argv) == 3 :
      print("You have requested a " + sys.argv[1] + " by " + sys.argv[2] + " grid")
    else:
