@@ -2,13 +2,13 @@
 import time
 import Adafruit_BBIO.GPIO as GPIO
 
-button1="GP0_6"  # PAUSE or MODE
+button1="GP0_6"  # GP0 for buttons
 button2="GP0_5"
 button3="GP0_4"
 button4="GP0_3"
 
 
-LED1   ="GREEN"
+LED1   ="GREEN" #GP1 for leds
 LED2   ="RED"
 LED3   ="GP1_4"
 LED4   ="GP1_3"
@@ -23,11 +23,11 @@ GPIO.setup(button2, GPIO.IN)
 GPIO.setup(button3, GPIO.IN)
 GPIO.setup(button4, GPIO.IN)
 
-# Turn on both LEDs
+# Turn on LEDs to default state
 GPIO.output(LED1, 0)
-GPIO.output(LED2, 0)
+GPIO.output(LED2, 1)
 GPIO.output(LED3, 0)
-GPIO.output(LED4, 0)
+GPIO.output(LED4, 1)
 
 # Map buttons to LEDs
 map = {button1: LED1, button2: LED2, button3: LED3, button4: LED4}
