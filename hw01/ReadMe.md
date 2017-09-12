@@ -10,3 +10,8 @@ To control the cursor, use the arrow keys. Pressing z clears the screen, and pre
 
 To change the cursor, press any other key while not moving.
 Some interesting keys to try: Space, Enter, |, #, Insert
+
+// Comment from Prof. Yoder
+// See README requirements
+// Python code is very nice
+// Grade:  7/10
