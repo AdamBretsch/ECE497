@@ -1,44 +1,36 @@
 #!/usr/bin/env python3
-import curses, sys, time
+import curses, sys, time, numpy
 import Adafruit_BBIO.GPIO as GPIO
 
 button1="GP0_6"  # PAUSE or MODE
 button2="GP0_5"
 button3="GP0_4"
 button4="GP0_3"
-
-
-LED1   ="GREEN"
-LED2   ="RED"
-LED3   ="GP1_4"
-LED4   ="GP1_3"
+pbutton="PAUSE"
+mbutton="MODE"
 
 # Set the GPIO pins:
-GPIO.setup(LED1,    GPIO.OUT)
-GPIO.setup(LED2,    GPIO.OUT)
-GPIO.setup(LED3,    GPIO.OUT)
-GPIO.setup(LED4,    GPIO.OUT)
 GPIO.setup(button1, GPIO.IN)
 GPIO.setup(button2, GPIO.IN)
 GPIO.setup(button3, GPIO.IN)
 GPIO.setup(button4, GPIO.IN)
+GPIO.setup(pbutton, GPIO.IN)
+GPIO.setup(mbutton, GPIO.IN)
 
-# Turn on both LEDs
-GPIO.output(LED1, 0)
-GPIO.output(LED2, 0)
-GPIO.output(LED3, 0)
-GPIO.output(LED4, 0)
+# TODO: add variable grid
+x1 = 8
+y1 = 8
+screen = [[' '  for x in range(x1)] for x in range(y1)]
 
-# Map buttons to LEDs
-map = {button1: LED1, button2: LED2, button3: LED3, button4: LED4}
+x = 4
+y =  4
 
-def updateLED(channel):
+def updatePosition(channel):
+    global x; global y; global y1; global x1
     print("channel = " + channel)
-    state = GPIO.input(channel)
-    GPIO.output(map[channel], state)
-    print(map[channel] + " Toggled")
-    if channel == 'PAUSE': # quit
-          break
+    key = channel
+    if key  == 'PAUSE': # quit
+      print("quit here") # TODO add quit and reset   
     elif key == 'MODE': # clear screen
       print("clear screen")
     elif key == 'GP0_6': # TODO fix outside sceen bounds error
@@ -53,47 +45,38 @@ def updateLED(channel):
     elif key == 'GP0_3':
         if x < x1:
           x += 1
-   
-print("Running...")
-
-GPIO.add_event_detect(button1, GPIO.BOTH, callback=updateLED) # RISING, FALLING or BOTH
-GPIO.add_event_detect(button2, GPIO.BOTH, callback=updateLED)
-GPIO.add_event_detect(button3, GPIO.BOTH, callback=updateLED)
-GPIO.add_event_detect(button4, GPIO.BOTH, callback=updateLED)
+# TODO: Debounce switch somehow
+GPIO.add_event_detect(button1, GPIO.RISING, callback=updatePosition) # RISING, FALLING or BOTH
+GPIO.add_event_detect(button2, GPIO.RISING, callback=updatePosition)
+GPIO.add_event_detect(button3, GPIO.RISING, callback=updatePosition)
+GPIO.add_event_detect(button4, GPIO.RISING, callback=updatePosition)
+GPIO.add_event_detect(mbutton, GPIO.RISING, callback=updatePosition)
+GPIO.add_event_detect(pbutton, GPIO.RISING, callback=updatePosition)
 
 def main():
-    # look for arguments
-    if len(sys.argv) == 3:
-      x1 = int(sys.argv[1])
-      y1 = int(sys.argv[2])
-    else:
-      x1 = 8
-      y1 = 8
-    #  account for 0 included in numbering
-    x1 = x1-1
-    y1 = y1-1
-    # clear screen
-    y0, x0 = 0, 0
-    # find screen center and move cursor
-    yc, xc = (y1-y0)//2, (x1-x0)//2
-
-    x = xc
-    y = yc
-
-    while True:
-      time.sleep(100)
-      print("Position: "+x+", "+y) 
-      except KeyboardInterrupt:
-        print("Cleaning Up")
-        GPIO.cleanup()
+    try:
+      print("Running..")
+      while True:
+        time.sleep(1)
+        print("Position: "+str(x)+", "+str(y)) 
+        screen[x][y] = 'X'
+        #print(numpy.matrix(screen))
+        format_array(screen)
+    except KeyboardInterrupt:
+      print(" Cleaning Up")
       GPIO.cleanup()
+    GPIO.cleanup()
+
+def format_array(arr):
+  for row in arr:
+      for element in row:
+          print(element, end=" ")
+      print('')
+  return 
 
 if __name__ == "__main__":
    # pregame instructions
    print("Welcome to Etch-A-Sketch")
-   if len(sys.argv) == 3 :
-     print("You have requested a " + sys.argv[1] + " by " + sys.argv[2] + " grid")
-   else:
-     print("You have not requested a grid size, so 8 by 8 will be used. To request a grid size see readme")
    input("Press enter to begin playing...")
    main()
+
