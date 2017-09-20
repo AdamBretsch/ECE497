@@ -27,51 +27,67 @@ GPIO.setup(button3, GPIO.IN)
 GPIO.setup(button4, GPIO.IN)
 GPIO.setup(pbutton, GPIO.IN)
 GPIO.setup(mbutton, GPIO.IN)
-
-screen = [[' '  for x in range(8)] for x in range(8)]
-# find screen center and move cursor
+x1, y1 = 8, 8
+screen = [[' '  for x in range(x1)] for x in range(y1)]
 yc, xc = 4, 4
+screen[xc][yc] = 'O'
 x,oldx,y,oldy  = xc,xc,xc,xc
 quitflag = False
 
 # The first byte is GREEN, the second is RED.
-smile = [0x00, 0x3c, 0x00, 0x42, 0x28, 0x89, 0x04, 0xFF,
-    0x04, 0x85, 0x28, 0x89, 0x00, 0x42, 0x00, 0x00
-]
-frown = [0x3c, 0x00, 0x42, 0x00, 0x85, 0x20, 0x89, 0x00,
-    0x89, 0x00, 0x85, 0x20, 0x42, 0x00, 0x3c, 0x00
-]
-neutral = [0x3c, 0x3c, 0x42, 0x42, 0xa9, 0xa9, 0x89, 0x89,
-    0x89, 0x89, 0xa9, 0xa9, 0x42, 0x42, 0x3c, 0x3c
-]
-display = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-]
+def clearDisplay():
+   disp = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   ]
+   return disp
 
-def formatArray(arr,disp):
+display = clearDisplay()
+lastx,lasty,index_x,index_y = None,None,4,4
+
+
+def displayArray(arr): 
+   global lastx,lasty,index_x,index_y,display
+   disp = clearDisplay()
    for i in range(len(arr)):
       for j in range(len(arr[i])):
          if arr[i][j] == 'X':
-            index = 2*i+1
-            disp[index] += 2**j
+           #print("index_x,lastx ",index_x,lastx)
+           #if index_x != lastx:
+            print("X found at ",i,", ",j)
+            index_x = 2*i+1
+            print("index_x= ",index_x)
+            disp[index_x] += 2**j
+            lastx = index_x
+            print("disp[index_x]= ", disp[index_x])
          if arr[i][j] == 'O':
-            index = 2*i
-            disp[index] += 2**j
-   return 
+           #print("index_y, lasty ",index_y,lasty)
+           #if index_y != lasty:
+            print("O found at ",i,", ",j)
+            index_y = 2*i
+            print("index_y= ",index_y)
+            disp[index_y] += 2**j
+            lasty = index_y
+            print("disp[index_y]= ", disp[index_y])            
+   return disp
 
-formatArray(screen,display)
-bus.write_i2c_block_data(matrix, 0, display)
+def printArray(arr):
+  for row in arr:
+      for element in row:
+          print(element, end=" ")
+      print('')
+  return 
+ 
 
 # method called on button push to move cursor
 def updatePosition(channel):
 
-    # debounce
+    # debounce ?
     state = GPIO.input(channel)
     time.sleep(0.05)
     if state != GPIO.input(channel):
       return
 
-    global x,y,y1,x1,oldx,oldy,screen,quitflag
+    global x,y,x1,y1,oldx,oldy,screen,quitflag,display
     #print("channel = " + channel)
     key = channel
     oldx = x;
@@ -80,7 +96,7 @@ def updatePosition(channel):
         quitflag = True
     elif key == 'MODE': # clear screen
         print("Clearing screen...")
-        screen = [[' '  for x in range(8)] for x in range(8)]
+        screen = [[' '  for x in range(y1)] for x in range(x1)]
     elif key == 'GP0_6': 
         if y > 0:
           y -= 1
@@ -95,6 +111,10 @@ def updatePosition(channel):
           x += 1    
     screen[oldx][oldy] = 'X'
     screen[x][y] = 'O'
+    display = displayArray(screen)
+    printArray(screen)
+    bus.write_i2c_block_data(matrix, 0, display)
+    
 
 GPIO.add_event_detect(button1, GPIO.RISING, callback=updatePosition) # RISING, FALLING or BOTH
 GPIO.add_event_detect(button2, GPIO.FALLING, callback=updatePosition)
@@ -107,17 +127,18 @@ GPIO.add_event_detect(pbutton, GPIO.FALLING, callback=updatePosition)
 def main():
     try:
       print("Running..")
+      printArray(screen)
+      display = displayArray(screen)
       while True:
         if quitflag:
           print("Quitting Etch-a-Sketch, thanks for playing!")
           GPIO.cleanup()
           break
-        time.sleep(1)
+        time.sleep(0.5)
+        #printArray(screen)
+        #displayArray(screen,dis)
+        #bus.write_i2c_block_data(matrix, 0, display)
         print("Position: "+str(x)+", "+str(y)) 
-        screen[oldx][oldy] = 'X'
-        screen[x][y] = 'O'
-        formatArray(screen,display)
-        bus.write_i2c_block_data(matrix, 0, display)
     except KeyboardInterrupt:
       print(" Cleaning Up")
       GPIO.cleanup()
