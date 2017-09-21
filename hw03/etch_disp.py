@@ -104,13 +104,13 @@ def updatePosition(channel):
         if y > 0:
           y -= 1
     elif key == 'GP0_5':
-        if y < y1:
+        if y < (y1-1):
           y += 1
     elif key == 'GP0_4':
         if x > 0:
           x -= 1
     elif key == 'GP0_3':
-        if x < x1:
+        if x < (x1-1):
           x += 1    
     # update displays
     screen[oldx][oldy] = 'X'
