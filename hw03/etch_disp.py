@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Write an 8x8 Red/Green LED matrix
+# Etch a sketch with buttons and 8x8 bicolor led display
 # https://www.adafruit.com/product/902
 
 import smbus, time
@@ -27,25 +27,26 @@ GPIO.setup(button3, GPIO.IN)
 GPIO.setup(button4, GPIO.IN)
 GPIO.setup(pbutton, GPIO.IN)
 GPIO.setup(mbutton, GPIO.IN)
+
+# set up variable
 x1, y1 = 8, 8
 screen = [[' '  for x in range(x1)] for x in range(y1)]
 yc, xc = 4, 4
 screen[xc][yc] = 'O'
 x,oldx,y,oldy  = xc,xc,xc,xc
 quitflag = False
+lastx,lasty,index_x,index_y = None,None,4,4
 
 # The first byte is GREEN, the second is RED.
 def clearDisplay():
+# method to clear display
    disp = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
    ]
    return disp
 
-display = clearDisplay()
-lastx,lasty,index_x,index_y = None,None,4,4
-
-
 def displayArray(arr): 
+# convert array data to i2c bus display
    global lastx,lasty,index_x,index_y,display
    disp = clearDisplay()
    for i in range(len(arr)):
@@ -71,6 +72,7 @@ def displayArray(arr):
    return disp
 
 def printArray(arr):
+# method to print array onto console output
   for row in arr:
       for element in row:
           print(element, end=" ")
@@ -78,8 +80,8 @@ def printArray(arr):
   return 
  
 
-# method called on button push to move cursor
 def updatePosition(channel):
+# method called on button push to move cursor and update displays
 
     # debounce ?
     state = GPIO.input(channel)
@@ -92,6 +94,7 @@ def updatePosition(channel):
     key = channel
     oldx = x;
     oldy = y;
+    # check which button pushed, act accordingly
     if key  == 'PAUSE': # quit
         quitflag = True
     elif key == 'MODE': # clear screen
@@ -109,13 +112,16 @@ def updatePosition(channel):
     elif key == 'GP0_3':
         if x < x1:
           x += 1    
+    # update displays
     screen[oldx][oldy] = 'X'
     screen[x][y] = 'O'
     display = displayArray(screen)
     printArray(screen)
     bus.write_i2c_block_data(matrix, 0, display)
+    print("Position: "+str(x)+", "+str(y)) 
     
-
+    
+# event listeners
 GPIO.add_event_detect(button1, GPIO.RISING, callback=updatePosition) # RISING, FALLING or BOTH
 GPIO.add_event_detect(button2, GPIO.FALLING, callback=updatePosition)
 GPIO.add_event_detect(button3, GPIO.RISING, callback=updatePosition)
@@ -123,27 +129,28 @@ GPIO.add_event_detect(button4, GPIO.FALLING, callback=updatePosition)
 GPIO.add_event_detect(mbutton, GPIO.FALLING, callback=updatePosition)
 GPIO.add_event_detect(pbutton, GPIO.FALLING, callback=updatePosition)
 
-# main method run after setup
 def main():
+# main method run after setup
+    global quitflag
     try:
       print("Running..")
+      # inital display update
       printArray(screen)
       display = displayArray(screen)
+      bus.write_i2c_block_data(matrix, 0, display)
+      print("Position: "+str(x)+", "+str(y)) 
       while True:
+      # main loop listening for quitflag
         if quitflag:
           print("Quitting Etch-a-Sketch, thanks for playing!")
+          bus.write_i2c_block_data(matrix, 0, clearDisplay())
           GPIO.cleanup()
           break
-        time.sleep(0.5)
-        #printArray(screen)
-        #displayArray(screen,dis)
-        #bus.write_i2c_block_data(matrix, 0, display)
-        print("Position: "+str(x)+", "+str(y)) 
+        time.sleep(0.1)
     except KeyboardInterrupt:
-      print(" Cleaning Up")
-      GPIO.cleanup()
-    GPIO.cleanup()
-
+          print("Quitting Etch-a-Sketch, thanks for playing!")
+          bus.write_i2c_block_data(matrix, 0, clearDisplay())
+          GPIO.cleanup()
 if __name__ == "__main__":
    # pregame instructions
    print("Welcome to Etch-A-Sketch")
