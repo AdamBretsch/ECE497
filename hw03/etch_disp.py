@@ -19,6 +19,25 @@ button3="GP0_4"
 button4="GP0_3"
 pbutton="PAUSE"
 mbutton="MODE"
+LED1  ="RED"
+LED2  ="GREEN" #GP1
+TA1   ="GP1_3"
+TA2   ="GP1_4"
+
+bus = smbus.SMBus(1)
+tmp1 = 0x48
+tmp2 = 0x4a
+alarm = 24
+# 0 - Temp
+# 1 - config - set bit 1 = 1 for interrupt mode
+# 2 - Tlow
+# 3 - Thigh
+bus.write_byte_data(tmp1, 1, 0x80) #default value was 0x80
+bus.write_byte_data(tmp1, 2, alarm)
+bus.write_byte_data(tmp1, 3, alarm)
+bus.write_byte_data(tmp2, 1, 0x80) #default value was 0x80
+bus.write_byte_data(tmp2, 2, alarm)
+bus.write_byte_data(tmp2, 3, alarm)
 
 # Set the GPIO pins:
 GPIO.setup(button1, GPIO.IN)
@@ -27,16 +46,32 @@ GPIO.setup(button3, GPIO.IN)
 GPIO.setup(button4, GPIO.IN)
 GPIO.setup(pbutton, GPIO.IN)
 GPIO.setup(mbutton, GPIO.IN)
+GPIO.setup(LED1, GPIO.OUT)
+GPIO.setup(LED2, GPIO.OUT)
+GPIO.setup(TA1, GPIO.IN)
+GPIO.setup(TA2, GPIO.IN)
 
 # set up variable
+color = 'O'
 x1, y1 = 8, 8
 screen = [[' '  for x in range(x1)] for x in range(y1)]
 yc, xc = 4, 4
-screen[xc][yc] = 'O'
+screen[xc][yc] = color
 x,oldx,y,oldy  = xc,xc,xc,xc
 quitflag = False
 lastx,lasty,index_x,index_y = None,None,4,4
 
+# 0 - Temp
+# 1 - config - set bit 1 = 1 for interrupt mode
+# 2 - Tlow
+# 3 - Thigh
+bus.write_byte_data(tmp1, 1, 0x80) #default value was 0x80
+bus.write_byte_data(tmp1, 2, alarm)
+bus.write_byte_data(tmp1, 3, alarm)
+bus.write_byte_data(tmp2, 1, 0x80) #default value was 0x80
+bus.write_byte_data(tmp2, 2, alarm)
+bus.write_byte_data(tmp2, 3, alarm
+)
 # The first byte is GREEN, the second is RED.
 def clearDisplay():
 # method to clear display
@@ -52,23 +87,22 @@ def displayArray(arr):
    for i in range(len(arr)):
       for j in range(len(arr[i])):
          if arr[i][j] == 'X':
-           #print("index_x,lastx ",index_x,lastx)
-           #if index_x != lastx:
-            print("X found at ",i,", ",j)
+           # print("X found at ",i,", ",j)
             index_x = 2*i+1
-            print("index_x= ",index_x)
+           # print("index_x= ",index_x)
             disp[index_x] += 2**j
-            lastx = index_x
-            print("disp[index_x]= ", disp[index_x])
          if arr[i][j] == 'O':
-           #print("index_y, lasty ",index_y,lasty)
-           #if index_y != lasty:
-            print("O found at ",i,", ",j)
+           # print("O found at ",i,", ",j)
             index_y = 2*i
-            print("index_y= ",index_y)
+           # print("index_y= ",index_y)
             disp[index_y] += 2**j
-            lasty = index_y
-            print("disp[index_y]= ", disp[index_y])            
+         if arr[i][j] == 'H':
+            print("H found at ",i,", ",j)
+            index_x = 2*i+1
+            disp[index_x] += 2**j
+            index_y = 2*i
+            disp[index_y] += 2**j
+                        
    return disp
 
 def printArray(arr):
@@ -89,7 +123,7 @@ def updatePosition(channel):
     if state != GPIO.input(channel):
       return
 
-    global x,y,x1,y1,oldx,oldy,screen,quitflag,display
+    global x,y,x1,y1,oldx,oldy,screen,quitflag,display,color
     #print("channel = " + channel)
     key = channel
     oldx = x;
@@ -106,15 +140,15 @@ def updatePosition(channel):
     elif key == 'GP0_5':
         if y < (y1-1):
           y += 1
-    elif key == 'GP0_4':
+    elif key == 'GP0_3':
         if x > 0:
           x -= 1
-    elif key == 'GP0_3':
+    elif key == 'GP0_4':
         if x < (x1-1):
           x += 1    
     # update displays
-    screen[oldx][oldy] = 'X'
-    screen[x][y] = 'O'
+    screen[oldx][oldy] = color
+    screen[x][y] = 'H'
     display = displayArray(screen)
     printArray(screen)
     bus.write_i2c_block_data(matrix, 0, display)
@@ -131,7 +165,7 @@ GPIO.add_event_detect(pbutton, GPIO.FALLING, callback=updatePosition)
 
 def main():
 # main method run after setup
-    global quitflag
+    global quitflag,color
     try:
       print("Running..")
       # inital display update
@@ -146,7 +180,27 @@ def main():
           bus.write_i2c_block_data(matrix, 0, clearDisplay())
           GPIO.cleanup()
           break
-        time.sleep(0.1)
+        # read temp
+        temp1 = bus.read_byte_data(tmp1, 0)
+        temp2 = bus.read_byte_data(tmp2, 0)
+        print("Temp1, Temp2: ",temp1,", ",temp2)
+        # check alarm values
+        if GPIO.input(TA1) == 0:
+           GPIO.output(LED1,1)
+           temp1f = temp1*9/5+32
+           print("Alarm one triggered at ", temp1f, " degrees F")
+           color = 'X'
+        elif GPIO.input(TA2) == 0:
+           GPIO.output(LED2,1)
+           temp2f = temp2*9/5+32
+           print("Alarm two triggered at ", temp2f," degrees F")
+           color = 'X'
+        else:
+           GPIO.output(LED1,0)
+           GPIO.output(LED2,0)
+           color = 'O'
+       
+        time.sleep(0.25)
     except KeyboardInterrupt:
           print("Quitting Etch-a-Sketch, thanks for playing!")
           bus.write_i2c_block_data(matrix, 0, clearDisplay())
@@ -155,6 +209,6 @@ if __name__ == "__main__":
    # pregame instructions
    print("Welcome to Etch-A-Sketch")
    print("Use the 4 buttons to move the cursor, mode key to clear, and pause key to quit")
+   print("Use the tempuarature sensor to change the color")
    input("Press enter to begin playing...")
    main()
-

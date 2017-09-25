@@ -7,3 +7,5 @@
 # For example "./tempAlarm.py 85" sets the alarm to go off at 85 degrees F.
 
 # etch_display.py connects the previously made in hw02 etch a sketch with buttons to output to the led matrix. All the controls are the same as before, and printed to the console on startup.
+# The temperature sensors and red/green led function from tempAlarm.py has been added.
+# When the tempuature rises, the color of the etching changes from green to red.

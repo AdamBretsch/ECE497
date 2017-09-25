@@ -25,8 +25,7 @@ GPIO.setup(TA1, GPIO.IN)
 GPIO.setup(TA2, GPIO.IN)
 bus = smbus.SMBus(1)
 tmp1 = 0x48
-tmp2 = 0x4
-a
+tmp2 = 0x4a
 # 0 - Temp
 # 1 - config - set bit 1 = 1 for interrupt mode
 # 2 - Tlow
