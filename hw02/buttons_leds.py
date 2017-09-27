@@ -25,9 +25,9 @@ GPIO.setup(button4, GPIO.IN)
 
 # Turn on LEDs to default state
 GPIO.output(LED1, 0)
-GPIO.output(LED2, 1)
+GPIO.output(LED2, 0)
 GPIO.output(LED3, 0)
-GPIO.output(LED4, 1)
+GPIO.output(LED4, 0)
 
 # Map buttons to LEDs
 map = {button1: LED1, button2: LED2, button3: LED3, button4: LED4}
@@ -35,6 +35,11 @@ map = {button1: LED1, button2: LED2, button3: LED3, button4: LED4}
 def updateLED(channel):
     print("channel = " + channel)
     state = GPIO.input(channel)
+    if channel == "GP0_5" or  channel == "GP0_3":
+      if state == 1:
+        state = 0
+      else:
+        state = 1
     GPIO.output(map[channel], state)
     print(map[channel] + " Toggled")
 
