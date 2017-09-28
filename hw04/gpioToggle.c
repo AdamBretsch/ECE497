@@ -111,6 +111,8 @@ int main(int argc, char *argv[]) {
     reg = *gpio3_oe_addr;
     printf("GPIO3 configuration: %X\n", reg);
     reg &= GPIO3_17;       // Set button1 bit to 1
+    *gpio3_oe_addr = reg;
+
     printf("Start copying PAUSE to USR2\n");
     printf("Start copying GPIO3_17 to USR3\n");
 
@@ -129,6 +131,11 @@ int main(int argc, char *argv[]) {
             *gpio1_cleardataout_addr = USR3;
     	}
     }
+    // unmap GPIO
+    munmap((void *)gpio1_addr, GPIO1_SIZE);
+    munmap((void *)gpio2_addr, GPIO2_SIZE);
+    munmap((void *)gpio3_addr, GPIO3_SIZE);
+
     close(fd);
     return 0;
 }

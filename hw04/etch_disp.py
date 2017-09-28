@@ -28,7 +28,7 @@ TA2   ="GP1_4"
 
 tmp1 = 0x48
 tmp2 = 0x4a
-alarm = 28
+alarm = 26
 # 0 - Temp
 # 1 - config - set bit 1 = 1 for interrupt mode
 # 2 - Tlow
@@ -53,7 +53,7 @@ GPIO.setup(TA1, GPIO.IN)
 GPIO.setup(TA2, GPIO.IN)
 
 # set up variable
-color = 'O'
+color = 'H'
 x1, y1 = 8, 8
 screen = [[' '  for x in range(x1)] for x in range(y1)]
 yc, xc = 4, 4
@@ -177,6 +177,8 @@ def main():
       printArray(screen)
       display = displayArray(screen)
       bus.write_i2c_block_data(matrix, 0, display)
+      e2old = 0
+      e3old = 0
       print("Position: "+str(x)+", "+str(y)) 
       while True:
       # main loop listening for quitflag
@@ -188,14 +190,16 @@ def main():
         # read encoders
         e2 = encoder.get(2) 
         e3 = encoder.get(3)
-        if e2 > 30:
+        if e2 > e2old:
             updatePosition('Joy2+')
-        elif e2 < -30:
+        elif e2 < e2old:
             updatePosition('Joy2-')
-        if e3 > 30:
+        if e3 > e3old:
             updatePosition('Joy3+')
-        elif e3 < -30:
+        elif e3 < e3old:
             updatePosition('Joy3-')
+        e2old = encoder.get(2) 
+        e3old = encoder.get(3)
         # read temp
         temp1 = bus.read_byte_data(tmp1, 0)
         temp2 = bus.read_byte_data(tmp2, 0)
@@ -209,11 +213,11 @@ def main():
            GPIO.output(LED2,1)
            temp2f = temp2*9/5+32
            print("Alarm two triggered at ", temp2f," degrees F")
-           color = 'X'
+           color = 'O'
         else:
            GPIO.output(LED1,0)
            GPIO.output(LED2,0)
-           color = 'O'
+           color = 'H'
        
         time.sleep(0.25)
     except KeyboardInterrupt:
@@ -224,6 +228,7 @@ if __name__ == "__main__":
    # pregame instructions
    print("Welcome to Etch-A-Sketch")
    print("Use the 4 buttons to move the cursor, mode key to clear, and pause key to quit")
-   print("Use the tempuarature sensor to change the color")
+   print("Or use the 2 encoders to move the cursor")
+   print("Use the tempuarature sensor to change the color, leds show color selected")
    input("Press enter to begin playing...")
    main()
