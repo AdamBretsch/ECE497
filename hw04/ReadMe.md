@@ -8,3 +8,6 @@
 
 # etch_display has full functionality with buttons, LEDMatrix, TMP101 sensors, and now encoders.
 # Instructions on how to play are shown at startup.
+
+# memstack_gpio.jpg is a visual representation of the memory and GPIO ports of the BeagleBone Blue
+
