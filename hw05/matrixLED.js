@@ -1,10 +1,9 @@
     var socket;
     var firstconnect = true,
         i2cNum  = "0x70",
-	dispg = [],
-    dispr = [],
-    disp = []
-    state = [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0]];
+	dispg = [], // red display
+    dispr = [], // green display
+    disp = [];
 // Create a matrix of LEDs inside the <table> tags.
 var matrixData;
 for(var j=7; j>=0; j--) {
@@ -28,50 +27,29 @@ function LEDclick(i, j) {
  	status_update(i+","+j+" clicked");
     // Toggle bit on display
     var element = $('#id'+i+'_'+j);
-    if (element.hasClass('green')){
+    if (element.hasClass('green')){ // if green, turn red
             dispg[i] ^= 0x1<<j;
             socket.emit('i2cset', {i2cNum: i2cNum, i: 2*i, disp: '0x'+dispg[i].toString(16)});
             dispr[i] ^= 0x1<<j;
             socket.emit('i2cset', {i2cNum: i2cNum, i: 2*i+1, disp: '0x'+dispr[i].toString(16)});
             element.removeClass('green');
             element.addClass('red');
-    } else if (element.hasClass('red')){
+    } else if (element.hasClass('red')){ // if red, turn yellow
             dispg[i] ^= 0x1<<j;
             socket.emit('i2cset', {i2cNum: i2cNum, i: 2*i, disp: '0x'+dispg[i].toString(16)});
             element.removeClass('red');
             element.addClass('yellow');
-    } else if(element.hasClass('yellow')){
+    } else if(element.hasClass('yellow')){ // if yellow, turn off
             dispg[i] ^= 0x1<<j;
             socket.emit('i2cset', {i2cNum: i2cNum, i: 2*i, disp: '0x'+dispg[i].toString(16)});
             dispr[i] ^= 0x1<<j;
             socket.emit('i2cset', {i2cNum: i2cNum, i: 2*i+1, disp: '0x'+dispr[i].toString(16)});
             element.removeClass('yellow');
-    } else {
+    } else { // if off, turn green
         dispg[i] ^= 0x1<<j;
         socket.emit('i2cset', {i2cNum: i2cNum, i: 2*i, disp: '0x'+dispg[i].toString(16)});
         element.addClass('green');
     }
-    /*
-    if (state[i][j] == 0) {
-       // alert("empty button");
-        $('#id' + i + '_' + j).addClass('green');
-        disp[i] ^= 0x1<<j;
-        state[i][j]++;
-    }
-    if (state[i][j] == 1) {
-        $('#id' + i + '_' + j).removeClass('green');
-        disp[i] ^= 0x1<<j;
-        state[i][j] = 0;
-    }
-    if ($('#id' + i + '_' + j).hasClass('green')){
-        if ($('#id' + i + '_' + j).hasClass('red')){
-            $('#id' + i + '_' + j).removeClass('red');
-            $('#id' + i + '_' + j).removeClass('green');
-            $('#id' + i + '_' + j).addClass('yellow');
-        }
-    }
-    socket.emit('i2cset', {i2cNum: i2cNum, i: 2*i, 
-			     disp: '0x'+disp[i].toString(16)});*/
 }
 
     function connect() {
@@ -127,22 +105,19 @@ function LEDclick(i, j) {
         status_update("data: " + data);
         // Every other pair of digits are Green. The others are red.
         // Convert from hex.
-        for (i = 0; i < data.length; i++) {
+        for (i = 0; i < data.length; i++) { // construct total display
             disp[i] = parseInt(data[i], 16);
         }
-        for (i = 0; i < data.length; i++) {
+        
+        for (i = 0; i < data.length; i++) { // construct green/red displays
             if (i % 2 === 0){
                 dispg[i/2] = parseInt(data[i], 16);
-            }
-        }
-        for (i = 0; i < data.length; i++) {
-            if (i % 2 === 1){
-                dispr[i/2+1] = parseInt(data[i], 16);
-            }
+                dispr[i/2] = parseInt(data[i+1], 16);
+            } 
         }
         //status_update("dispr: " + dispr);
         // i cycles through each column
-        for (i = 0; i < dispg.length; i++) {
+        for (i = 0; i < dispg.length; i++) { // scan for green
             // j cycles through each bit
             for (j = 0; j < 8; j++) {
                 if (((dispg[i] >> j) & 0x1) === 1) {
@@ -150,19 +125,16 @@ function LEDclick(i, j) {
                 }
             }
         }
-        for (i = 0; i < dispr.length; i++) {
+        for (i = 1; i < dispr.length; i++) { // scan for red/yellow
             // j cycles through each bit
             for (j = 0; j < 8; j++) {
                 if (((dispr[i] >> j) & 0x1) === 1) {
-                    $('#id' + i + '_' + j).addClass('red');
+                    if (((dispg[i] >> j) & 0x1) === 1) {
+                        $('#id' + i + '_' + j).addClass('yellow');
+                    } else {    
+                        $('#id' + i + '_' + j).addClass('red');
+                    }
                 }
-            }
-        }
-        if ($('#id' + i + '_' + j).hasClass('green')){
-            if ($('#id' + i + '_' + j).hasClass('red')){
-                $('#id' + i + '_' + j).removeClass('red');
-                $('#id' + i + '_' + j).removeClass('green');
-                $('#id' + i + '_' + j).addClass('yellow');
             }
         }
     }
@@ -182,4 +154,4 @@ $(function () {
     $("#i2cNum").val(i2cNum).change(function () {
         i2cNum = $(this).val();
     });
-});
+})

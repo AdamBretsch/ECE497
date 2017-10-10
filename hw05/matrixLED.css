@@ -3,6 +3,7 @@ body {
   font-size: 16px;
   margin: 25px;
   max-width: 650px;
+  background-color: #707070;
 }
 
 #slider1 { margin: 10px; width: 230px; 
