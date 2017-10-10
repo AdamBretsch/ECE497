@@ -11,3 +11,7 @@
 
 # memstack_gpio.jpg is a visual representation of the memory and GPIO ports of the BeagleBone Blue
 
+# Comments from Prof. Yoder
+# Found your memory map file
+# Looks good.
+# Grade:  10/10
