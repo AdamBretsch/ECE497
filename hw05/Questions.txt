@@ -1,0 +1,3 @@
+HW 5 Question Answers
+
+1) The LED matrix is controlled through node.js messages

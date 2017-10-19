@@ -141,13 +141,13 @@ int main(int argc, char *argv[] )
         b = (int) argv[3]; 
     }
 	while(rc_get_state() != EXITING) {
-    	if (!(*gpio2_datain & PAUSE)) {
+    	if (!(*gpio2_datain & PAUSE)) { // widen width with pause button
             if (width < 20){
                 printf("width++, w = %d", width);
                 width++;
             }
             *gpio1_setdataout_addr= USR3;
-    	} else if (!(*gpio2_datain & MODE)){
+    	} else if (!(*gpio2_datain & MODE)){ // narrow width with mode button
         if (width > 5){
                 printf("width--, w = %d", width);
                 width--;
@@ -170,7 +170,7 @@ int main(int argc, char *argv[] )
         
         if((x != xold) || (y != yold)) {
             printf("Updating location to %d, %d\n", x, y);
-            // Set old location to green
+            // Original drawing logic
             /*location = (xold+vinfo.xoffset) * (vinfo.bits_per_pixel/8) +
                        (yold+vinfo.yoffset) * finfo.line_length;
             unsigned short int t = r<<11 | g << 5 | b;
@@ -209,7 +209,7 @@ int main(int argc, char *argv[] )
 		
 		rc_usleep(5000);
 	}
-	
+	// cleanup 
 	rc_cleanup();
     
     munmap(fbp, screensize);
