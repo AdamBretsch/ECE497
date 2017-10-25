@@ -13,5 +13,7 @@
 
 # The size can be controlled with the MODE and PAUSE buttons
 
-
-
+// Comments from Prof. Yoder
+// What's the difference between install and install.sh?
+// It works!
+// Grade:  9/10
