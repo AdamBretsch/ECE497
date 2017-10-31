@@ -7,3 +7,8 @@
 # Click on the LEDs to change their color
 
 # The rest of the files support this functionality, espcially matrixLED.html and matrixLED.css
+
+// Comments from Prof. Yoder
+// Answers are missing in Questions.txt
+// It works!
+// Grade:  8/10
